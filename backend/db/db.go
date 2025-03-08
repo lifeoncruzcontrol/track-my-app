@@ -1,9 +1,11 @@
 package db
 
 import (
+	"bufio"
 	"context"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,8 +20,50 @@ var (
 	Job_Apps *mongo.Collection
 )
 
+// loadEnv manually reads a .env file and sets environment variables.
+func loadEnv(filename string) {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Println("Warning: No .env file found, using system environment variables")
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Ignore empty lines and comments
+		if strings.TrimSpace(line) == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Split into key and value
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			log.Printf("Invalid line in .env file: %s", line)
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		// Remove surrounding quotes if present
+		value = strings.Trim(value, `"'`)
+
+		// Set environment variable
+		os.Setenv(key, value)
+	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("Error reading .env file: %v", err)
+	}
+}
+
 func init() {
+
+	loadEnv(".env")
 	MongoURI = os.Getenv("MONGO_URI")
+
 	if MongoURI == "" {
 		log.Fatal("Missing MONGO_URI variable")
 		return
@@ -33,6 +77,14 @@ func init() {
 		log.Fatal("Error connecting to database")
 		Cancel()
 		return
+	}
+
+	// Test connection
+	err = Client.Ping(Ctx, nil)
+	if err != nil {
+		log.Fatal("Failed to ping MongoDB:", err)
+	} else {
+		log.Println("Connected to MongoDB successfully!")
 	}
 
 	db := Client.Database("job-app-db")
