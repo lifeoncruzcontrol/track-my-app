@@ -14,7 +14,7 @@ func main() {
 	})
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},
-		AllowedMethods: []string{"GET"},
+		AllowedMethods: []string{"GET", "POST"},
 	}).Handler(mux)
 
 	log.Println("Starting server on :8080")
