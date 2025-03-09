@@ -79,14 +79,6 @@ func init() {
 		return
 	}
 
-	// Test connection
-	err = Client.Ping(Ctx, nil)
-	if err != nil {
-		log.Fatal("Failed to ping MongoDB:", err)
-	} else {
-		log.Println("Connected to MongoDB successfully!")
-	}
-
 	db := Client.Database("job-app-db")
 	Job_Apps = db.Collection("job-apps")
 }
