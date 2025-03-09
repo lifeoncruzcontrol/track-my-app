@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"track-my-app-api/db"
+	"track-my-app-api/handlers"
 
 	"github.com/rs/cors"
 )
@@ -20,6 +21,16 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello world"))
+	})
+
+	mux.HandleFunc("/job-apps", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			handlers.CreateJobAppHandler(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
 	})
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:5173"},
